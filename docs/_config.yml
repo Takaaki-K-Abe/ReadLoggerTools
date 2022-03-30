@@ -1,5 +1,5 @@
 theme: jekyll-theme-dinky
 title: Read logger tools
-description: Read animal-borne data logger
+description: Read-in package of Igor for data acquired by animal-borne data loggers.
 author:
   name: Takaaki K. Abe
