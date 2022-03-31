@@ -37,12 +37,11 @@ Igor Proを起動したらProcedure windowを開き、以下のコマンドを�
 ### Little Leonardo
 
 - W-Series
-  - All model
-- ORI-Series
-  - ORI400-PD3GTC
 - [ECG-series](https://takaaki-k-abe.github.io/ReadLoggerTools/Read_LL_ECG.html)
 
-### Lotek
+<!-- - ORI-Seires -->
+
+<!-- ### Lotek
 
 - LAT-Series
-  - LAT2910
+  - LAT2910 -->
