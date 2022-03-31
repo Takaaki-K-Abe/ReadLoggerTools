@@ -6,7 +6,7 @@
 /// @breif		The tools for reading W-series logger data from raw text data
 /// @author		Takaaki K. Abe (E-mail: t.abe.hpa@gmail.com)
 /// @date		
-/// Version:	1.0
+/// Version:	1.01
 /// Revision:	0
 /// @note		
 /// 
@@ -18,14 +18,144 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 Menu "Read Logger Data"
-	"W series",/Q, Read_W_Series_LoggerData() 
+	"W series",/Q, Panel_Read_Wseries()
 End
 
 //	================================================================================================
-//		About proceadures for header
+//	Graphical interface
 //	================================================================================================
 
-Function Read_W_Series_LoggerData() ///abe edit
+/// @brief		Set default parameters for reading ECG data
+/// @param[out]		startDate (global string)
+/// @param[out]		startTime (global string)
+/// @param[out]		samplingFreqECG (global variable)
+Static Function SetDefaultParametersForReadingData()
+
+	string saveDF = GetDataFolder(1)
+
+	if(!DataFolderExists("root:Ethographer"))
+		NewDataFolder root:Ethographer
+	endif	
+	if(!DataFolderExists("root:Ethographer:ReadLoggerData"))
+		NewDataFolder root:Ethographer:ReadLoggerData
+	endif
+	if(!DataFolderExists("root:Ethographer:ReadLoggerData:Parameters"))
+		NewDataFolder root:Ethographer:ReadLoggerData:Parameters
+	endif
+	
+	SetDataFolder root:Ethographer:ReadLoggerData:Parameters
+
+	SVAR/Z startDate
+	if(!SVAR_Exists(startDate))
+		string/G startDate = "2021/01/01"
+	endif
+
+	SVAR/Z startTime
+	if(!SVAR_Exists(startTime))
+		string/G startTime = "00:00:00"
+	endif
+
+	SVAR/Z readMode
+	if(!SVAR_Exists(readMode))
+		string/G readMode = "Auto"
+	endif
+
+	SetDataFolder saveDF
+
+End
+
+/// @brief		Create a panel for reading logger data
+/// @note		start ボタンの作成
+Function Panel_Read_Wseries() : Panel
+
+	SetDefaultParametersForReadingData()
+		
+	variable Width = 250
+	variable Height = 185
+	variable Vertical = 56
+	variable Horizontal = 703
+
+	variable vertical_pos = 0
+	variable vertical_spacing = 21
+	string PathOfVariables = "root:Ethographer:ReadLoggerData:Parameters:"
+	
+	DoWindow ReadLoggerMenu
+	if(V_flag == 1)
+		DoWindow/K ReadLoggerMenu
+	endif
+	
+	PauseUpdate; Silent 1		// building window...
+	NewPanel/K=1/W=(Horizontal,Vertical,Horizontal + Width,Vertical + Height )/K=1
+	DoWindow/C ReadLoggerMenu
+	
+	// title 
+	vertical_pos += 9
+	TitleBox title_ParamSet, pos={30, vertical_pos},size={116,14},title="\\f01Read W-Series Logger Data"
+	TitleBox title_ParamSet, fSize=14,frame=0
+
+	// Mode
+	vertical_pos += 25
+	GroupBox group_mode, frame = 1//, title = "\Z11Mode"
+	GroupBox group_mode, pos = {13, vertical_pos}, size = {150, 1.5*vertical_Spacing}
+
+	vertical_pos += 0.25*vertical_Spacing
+	PopupMenu popup_readmode, pos = {25, vertical_pos}, size = {220,20}, title = "Read Mode"
+	PopupMenu popup_readmode, proc = ReadModeSelect_Wseries
+	PopupMenu popup_readmode, mode=1, popvalue = "Auto", value = #"\"Auto;Manual;\""
+
+	// Profiles
+	vertical_pos += 1.5*vertical_Spacing
+	GroupBox group_parameters, frame = 0, title = "\Z11Manual mode parameters"
+	GroupBox group_parameters, pos = {13, vertical_pos}, size = {220, 3*vertical_Spacing}
+
+	vertical_pos += vertical_spacing
+	SetVariable startDate, title = "Start Date", pos = {25, vertical_pos}, size = {137, 30}
+	SetVariable startDate, limits = {-90,90,0.1}, value = $( pathOfVariables+"startDate" )
+	
+	vertical_pos += vertical_spacing
+	SetVariable startTime, title = "Start Time", pos = {25, vertical_pos}, size = {137, 30}
+	SetVariable startTime, limits = {-180,180,0.1}, value = $( pathOfVariables+"startTime" )
+	
+	vertical_pos += vertical_spacing + 13
+	Button button_StartCalc, title="Start to read logger", proc = Button_Launch_ReadWseries
+	Button button_StartCalc, pos = {25, vertical_pos}, size={180, 20}
+	
+End
+
+/// @brief		Select read mode
+/// @param[in]	popStr (string): Auto or Manual	
+/// @param[out]	readMode: Auto or Manual	
+Function ReadModeSelect_Wseries(ctrlName,popNum,popStr) : PopupMenuControl
+
+	String ctrlName
+	Variable popNum
+	String popStr
+
+	SVAR readMode = root:Ethographer:ReadLoggerData:Parameters:readMode
+	readMode = popStr
+
+End
+
+/// @brief		
+Function Button_Launch_ReadWseries(ctrlName)
+	
+	string ctrlName
+	Read_W_Series_LoggerData()
+	
+	DoWindow ReadLoggerMenu
+	if(V_flag == 1)
+		DoWindow/K ReadLoggerMenu
+	endif
+
+End
+
+
+//	================================================================================================
+//	About proceadures for header
+//	================================================================================================
+
+/// @brief		W seriesのヘッダーに描かれたロガーデータの情報のうち、指定した情報を抜き出す。
+Function Read_W_Series_LoggerData()
 
 	Variable refNum
 	String message = "Select one or more files"
@@ -53,20 +183,20 @@ end
 ///				ヘッダーの情報はWvInfo0とWvInfo1に格納されている。
 /// @param		descriptionOfData (string): 読み取るデータの種類
 /// @return		Output (string): 読み取った情報 
-function Read_W_Logger([FileName])
+/// @note		manual read modeと auto read modeの使い分け
+Function Read_W_Logger([FileName])
 	String FileName
 	
 	string savDF = GetDataFolder(1)
-		NewDataFolder/O/S root:Ethographer
-		
-		if(DataFolderExists("ReadLoggerData"))
-			SetDataFolder ReadLoggerData
-		Else
-			NewDataFolder/S ReadLoggerData
-		Endif
-		killvariables/A/Z
-		killstrings/A/Z
-		killwaves/A/Z
+
+	if(!DataFolderExists("root:Ethographer"))
+		NewDataFolder root:Ethographer
+	endif	
+	if(!DataFolderExists("root:Ethographer:ReadLoggerData"))
+		NewDataFolder root:Ethographer:ReadLoggerData
+	endif
+	
+	SetDataFolder root:Ethographer:ReadLoggerData
 			
 	if(ParamIsDefault(FileName))
 		LoadWave/J/Q/A=WvInfo/K=2/L={0, 0, 10, 0, 0}
@@ -84,13 +214,9 @@ function Read_W_Logger([FileName])
 	variable DataID
 	
 	String FileType = FindValueFromLoggerDataHeader("Channel:")
-	// print FileType
 	String startDate = FindValueFromLoggerDataHeader("Start date:")
-	// print StartDate
 	String startTime = FindValueFromLoggerDataHeader("Start time:")
-	// print StartTime
 	String IntervalStr = FindValueFromLoggerDataHeader("Interval(Sec):")
-	// print IntervalStr
 
 	if(StrLen(FileType) == 0 || StrLen(StartDate) == 0 || StrLen(StartTime) == 0 || StrLen(IntervalStr) == 0)
 		print "//   Error."
@@ -111,6 +237,15 @@ function Read_W_Logger([FileName])
 
 	Printf "\r %s was created\r", wvName
 
+	// manual mode option
+	SVAR readMode = root:Ethographer:ReadLoggerData:Parameters:readMode
+	If(stringMatch(readMode, "Manual"))
+		SVAR startDateManual = root:Ethographer:ReadLoggerData:Parameters:startDate
+		startDate = startDateManual
+		SVAR startTimeManual = root:Ethographer:ReadLoggerData:Parameters:startTime
+		startTime = startTimeManual
+	Endif
+
 	variable startDatetime = ReturnDateTimeFromString(startDate, startTime)
 	
 	variable Interval = str2num(IntervalStr)
@@ -118,6 +253,9 @@ function Read_W_Logger([FileName])
 	SetScale/P x, startDatetime, Interval, "dat", $WvName
 	Note $WvName, FileName
 	killDataFolder root:Ethographer:ReadLoggerData
+		// 	killvariables/A/Z
+		// killstrings/A/Z
+		// killwaves/A/Z
 	
 	print "Read_W_Logger(FileName = \"" + FileName + "\")"
 End
@@ -126,7 +264,7 @@ End
 ///				ヘッダーの情報はWvInfo0とWvInfo1に格納されている。
 /// @param		descriptionOfData (string): 読み取るデータの種類
 /// @return		Output (string): 読み取った情報 
-static Function/S FindValueFromLoggerDataHeader(descriptionOfData)
+Static Function/S FindValueFromLoggerDataHeader(descriptionOfData)
 	String descriptionOfData
 
 	wave/T WvInfo0, WvInfo1
@@ -153,7 +291,7 @@ End
 /// @brief		
 /// @param		
 /// @return		
-static Function/S DefineWaveName(FileType)
+Static Function/S DefineWaveName(FileType)
 	string FileType
 	String WvName
 	
@@ -222,7 +360,7 @@ end
 /// @return		datetimeSeconds (variable):　Igor time
 /// @example	
 ///	variable datetimeSeconds = ReturnDateTimeFromString(dateString, timeString)
-static Function ReturnDateTimeFromString(dateString, timeString)
+Static Function ReturnDateTimeFromString(dateString, timeString)
 
 	string dateString, timeString
 	
