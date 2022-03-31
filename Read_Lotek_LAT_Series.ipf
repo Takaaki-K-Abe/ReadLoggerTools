@@ -1,9 +1,6 @@
 #pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
-
-#include "Ethographer"
-
 ////////////////////////////////////////////////////////////////////////////////
 /// @file		Read_LAT_Series.ipf
 /// @breif		Read ORI series logger tools
@@ -21,21 +18,23 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
+Menu "Read Logger Data"
+	"LAT, Lotek",/Q, Read_LAT() 
+End
+
 //	================================================================================================
 //										About proceadures for header
 //	================================================================================================
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief          
+/// @brief          Read LAT data
 /// @param[in]      fileName
 /// @param[out]     ExtTemp (wave)
 /// @param[out]     IntTemp (wave)
 /// @param[out]     Pressure (wave)
 /// @param[out]     Light (wave)
 /// @param[out]     DimFlag (wave)
-////////////////////////////////////////////////////////////////////////////////
 Function Read_LAT([fileName, newDF])
 
 	string fileName, newDF

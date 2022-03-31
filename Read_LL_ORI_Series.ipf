@@ -22,26 +22,16 @@
 //										About proceadures for header
 //	================================================================================================
 
-STRUCTURE LoadParameterSTRUCT
+STRUCTURE ParamReadORISTRUCT
 	variable startDateTime
 	variable samplingInterval
 EndStructure
 
-////////////////////////////////////////////////////////////////////////////////
 /// @brief          
 /// @param[in]      
 /// @param[out]     
 /// @return         
-/// @author         
-/// @date           
-/// @version        
-/// @note           
-/// @attention      
-/// @par            
-///                 
-///
-////////////////////////////////////////////////////////////////////////////////
-Function Load_ORI_LoggerHeader([fileName])
+Function Read_ORI_LoggerHeader([fileName])
 
 	string fileName
 
@@ -68,16 +58,18 @@ Function Load_ORI_LoggerHeader([fileName])
 	string/G loggerFilePath = S_path
 	string/G loggerFileName = S_filename
 
-	if(StrLen(S_filename) == 0)
+	If(StrLen(S_filename) == 0)
 		SetDataFolder savDF
 		return 0
 	Endif
 
+	//! start date and time
 	string startDate = FindValueFromLoggerHeader("*START DATE*")
 	string startTime = FindValueFromLoggerHeader("*START TIME*")
 
 	variable startDateTime = ReturnDateTimeFromString(startDate, startTime)
 
+	//! sampling Interval
 	string samplingIntervalString = FindValueFromLoggerHeader("*sec/point*")
 	variable samplingInterval
 	sscanf samplingIntervalString,  "%d", samplingInterval
@@ -85,7 +77,7 @@ Function Load_ORI_LoggerHeader([fileName])
 			samplingInterval /= 1000
 		endif
 	
-	STRUCT LoadParameterSTRUCT LoadParameters
+	STRUCT ParamReadORISTRUCT LoadParameters
 		LoadParameters.startDateTime 		= startDateTime
 		LoadParameters.samplingInterval 	= samplingInterval
 
@@ -99,47 +91,48 @@ Function Load_ORI_LoggerHeader([fileName])
 
 	SetDataFolder saveDF
 
-End Function
+End
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief		
-/// @param		
-/// @return	
-///
-////////////////////////////////////////////////////////////////////////////////
-Function/S FindValueFromLoggerHeader(DataType)
+/// @brief		Find the value of parameter from logger header
+/// @param[in]	parameterType (string): parameter type
+/// @param[in]	WvInfo0 (wave): text wave created from logger header (first column), where parameter types are stored
+/// @return		parameterValue (string): parameter value
+Static Function/S FindValueFromLoggerHeader(parameterType)
 	
-	string DataType
+	String parameterType
 
-	wave/T WvInfo0
-	variable rowID
+	Wave/T WvInfo0
+	Variable rowID
 	
 	For(rowID = 0; rowID <= 9; rowID += 1)
-		If(stringMatch(WvInfo0[rowID], DataType))
-			string Output = WvInfo0[rowID]
-			print output
+		If(stringMatch(WvInfo0[rowID], parameterType))
+			string paramValue = WvInfo0[rowID]
+			print paramValue
 			Break
 		Elseif(rowID >= 9)
 			return ""
 		Endif
 	EndFor
 	
-	Return Output
+	Return paramValue
 End
 
-////////////////////////////////////////////////////////////////////////////////
-/// @brief		日付と時間の文字列からIgor timeを返す
-/// @param		dateString (string): の文字列 (e.g. "2022/01/01")
-/// @param		timeString (string): の文字列 (e.g. "00:11:22")
-/// @return		datetimeSeconds (variable): 
-///
-////////////////////////////////////////////////////////////////////////////////
-Function ReturnDateTimeFromString(dateString, timeString)
+/// @brief		Return datetime seconds from date and time strings
+/// @param		dateString (string): string of date (e.g. "2022/01/01")
+/// @param		timeString (string): string of time (e.g. "00:11:22")
+/// @return		datetimeSeconds (variable): number of seconds for a given date from the system default start date and time
+Static Function ReturnDateTimeFromString(dateString, timeString)
 
 	string dateString, timeString
 	
 	variable dVal1, dVal2, dVal3
-	sscanf dateString, "START DATE %d/%d/%d", dVal1, dVal2, dVal3	
+	sscanf dateString, "START DATE %d/%d/%d", dVal1, dVal2, dVal3
+
+	If(dVal1 == 0 | dVal2 == 0 | dVal3 == 0)
+		dVal1 = 2000
+		dVal2 = 1
+		dVal3 = 1
+	Endif
 
 	variable year, month, day
 	if( dVal3 > 1000 )
@@ -165,11 +158,9 @@ Function ReturnDateTimeFromString(dateString, timeString)
 End
 
 
-////////////////////////////////////////////////////////////////////////////////
 /// @brief          
 /// @param[in]      
 /// @return         
-////////////////////////////////////////////////////////////////////////////////
 Function Load_ORI_LoggerAccelData([dataFolderPath])
 
 	string dataFolderPath
@@ -182,9 +173,9 @@ Function Load_ORI_LoggerAccelData([dataFolderPath])
 		Endif	
 	Endif
 
-	Load_ORI_LoggerHeader()
+	Read_ORI_LoggerHeader()
 
-	STRUCT LoadParameterSTRUCT Parameters
+	STRUCT ParamReadORISTRUCT Parameters
 	StructGet Parameters $"root:Ethographer:LoadLoggerData:ParameterForLoad"
 	
 	variable startDaT = Parameters.startDateTime
@@ -207,13 +198,11 @@ Function Load_ORI_LoggerAccelData([dataFolderPath])
 	wave Xaccel, Yaccel, Zaccel
 	SetScale/P x startDaT, interval, "dat", Xaccel, Yaccel, Zaccel
 
-end
+End
 
-////////////////////////////////////////////////////////////////////////////////
 /// @brief          
 /// @param[in]      
 /// @return         
-////////////////////////////////////////////////////////////////////////////////
 Function Load_ORI_PD3GTC_OtherData([dataFolderPath])
 
 	string dataFolderPath
@@ -226,9 +215,9 @@ Function Load_ORI_PD3GTC_OtherData([dataFolderPath])
 		Endif	
 	Endif
 
-	Load_ORI_LoggerHeader()
+	Read_ORI_LoggerHeader()
 
-	STRUCT LoadParameterSTRUCT Parameters
+	STRUCT ParamReadORISTRUCT Parameters
 	StructGet Parameters $"root:Ethographer:LoadLoggerData:ParameterForLoad"
 	
 	variable startDaT = Parameters.startDateTime
@@ -254,4 +243,4 @@ Function Load_ORI_PD3GTC_OtherData([dataFolderPath])
 	wave Depth, Temp, Speed, Salinity
 	SetScale/P x startDaT, interval, "dat", Depth, Temp, Speed, Salinity
 
-end
+End
