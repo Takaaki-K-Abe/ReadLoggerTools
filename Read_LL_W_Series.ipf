@@ -1,9 +1,9 @@
 ﻿#pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
-
-/// @file		Read_ECG_Series.ipf
-/// @breif		The tools for reading ECG logger data from raw text data
+////////////////////////////////////////////////////////////////////////////////
+/// @file		Read_W_Series.ipf
+/// @breif		The tools for reading W-series logger data from raw text data
 /// @author		Takaaki K. Abe (E-mail: t.abe.hpa@gmail.com)
 /// @date		
 /// Version:	1.0
@@ -15,6 +15,7 @@
 ///				Any code derived from this code should not be sold for commercial purposes.
 ///				Please cite the use of this code whenever possible.
 ///
+////////////////////////////////////////////////////////////////////////////////
 
 Menu "Read Logger Data"
 	"W series",/Q, Read_W_Series_LoggerData() 

@@ -1,10 +1,8 @@
 ﻿#pragma TextEncoding = "UTF-8"
 #pragma rtGlobals=3		// Use modern global access method and strict wave access.
 
-#include "Read_LL_ECG_Series"
 #include "Read_LL_W_Series"
-#include "Read_LL_ORI_Series"
-#include "Read_LAT_Series"
+#include "Read_LL_ECG_Series"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @file		ReadLoggerTools.ipf
