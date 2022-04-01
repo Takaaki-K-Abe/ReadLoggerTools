@@ -41,7 +41,7 @@ Igor Proを起動したらProcedure windowを開き、以下のコマンドを�
 
 ### Little Leonardo
 
-- W-Series
+- [W-Series](https://takaaki-k-abe.github.io/ReadLoggerTools/Read_LL_W_Series.html)
 - [ECG-series](https://takaaki-k-abe.github.io/ReadLoggerTools/Read_LL_ECG.html)
 
 <!-- - ORI-Seires -->
