@@ -20,7 +20,7 @@ gitがわからない方は、直接ファイルを下のリンクからダウ�
 User Proceduresを開いたら、ReadLoggerToolsをフォルダごと置いてください。
 これでインストールは完了です。
 
-[![](icons/icons_dl.png)](https://github.com/Takaaki-K-Abe/ReadLoggerTools/archive/refs/tags/V0.0.zip)
+[![](icons/icons_dl.png)](https://github.com/Takaaki-K-Abe/ReadLoggerTools/archive/refs/tags/V0.1.zip)
 
 ### 起動の仕方
 
